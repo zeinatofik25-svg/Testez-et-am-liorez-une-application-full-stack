@@ -17,18 +17,19 @@ describe('MeComponent', () => {
     sessionInformation: {
       admin: true,
       id: 1
-    }
+    },
+    logOut: jest.fn()
   }
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [MeComponent],
       imports: [
         MatSnackBarModule,
         HttpClientModule,
         MatCardModule,
         MatFormFieldModule,
         MatIconModule,
-        MatInputModule
+        MatInputModule,
+        MeComponent
       ],
       providers: [{ provide: SessionService, useValue: mockSessionService }],
     })
@@ -41,5 +42,27 @@ describe('MeComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should call back()', () => {
+    const spy = jest.spyOn(window.history, 'back');
+    component.back();
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('should call delete() and handle response', () => {
+    const userService = component['userService'];
+    const matSnackBar = component['matSnackBar'];
+    const sessionService = component['sessionService'];
+    const router = component['router'];
+    jest.spyOn(userService, 'delete').mockReturnValue({ pipe: () => ({ subscribe: (cb: any) => cb() }) } as any);
+    const snackSpy = jest.spyOn(matSnackBar, 'open');
+    const logoutSpy = jest.spyOn(sessionService, 'logOut');
+    const navSpy = jest.spyOn(router, 'navigate');
+    component.delete();
+    expect(snackSpy).toHaveBeenCalled();
+    expect(logoutSpy).toHaveBeenCalled();
+    expect(navSpy).toHaveBeenCalledWith(['/']);
   });
 });

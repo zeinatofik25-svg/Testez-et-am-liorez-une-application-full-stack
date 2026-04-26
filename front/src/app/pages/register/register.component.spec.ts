@@ -16,7 +16,6 @@ describe('RegisterComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [RegisterComponent],
       imports: [
         BrowserAnimationsModule,
         HttpClientModule,
@@ -24,7 +23,8 @@ describe('RegisterComponent', () => {
         MatCardModule,
         MatFormFieldModule,
         MatIconModule,
-        MatInputModule
+        MatInputModule,
+        RegisterComponent
       ]
     })
       .compileComponents();
@@ -36,5 +36,23 @@ describe('RegisterComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should call submit() and handle success', () => {
+    const authService = component['authService'];
+    const router = component['router'];
+    jest.spyOn(authService, 'register').mockReturnValue({ pipe: () => ({ subscribe: (obj: any) => obj.next() }) } as any);
+    const spyNavigate = jest.spyOn(router, 'navigate');
+    component.form.setValue({ email: 'test@test.com', firstName: 'a', lastName: 'b', password: 'pass' });
+    component.submit();
+    expect(spyNavigate).toHaveBeenCalledWith(['/login']);
+  });
+
+  it('should call submit() and handle error', () => {
+    const authService = component['authService'];
+    jest.spyOn(authService, 'register').mockReturnValue({ pipe: () => ({ subscribe: (obj: any) => obj.error('err') }) } as any);
+    component.form.setValue({ email: 'test@test.com', firstName: 'a', lastName: 'b', password: 'pass' });
+    component.submit();
+    expect(component.onError).toBe(true);
   });
 });

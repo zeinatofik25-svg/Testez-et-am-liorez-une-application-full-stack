@@ -18,8 +18,6 @@ describe('LoginComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [LoginComponent],
-      providers: [SessionService],
       imports: [
         RouterTestingModule,
         BrowserAnimationsModule,
@@ -28,7 +26,10 @@ describe('LoginComponent', () => {
         MatIconModule,
         MatFormFieldModule,
         MatInputModule,
-        ReactiveFormsModule]
+        ReactiveFormsModule,
+        LoginComponent
+      ],
+      providers: [SessionService],
     })
       .compileComponents();
     fixture = TestBed.createComponent(LoginComponent);
@@ -38,5 +39,27 @@ describe('LoginComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should call submit() and handle success', () => {
+    const authService = component['authService'];
+    const sessionService = component['sessionService'];
+    const router = component['router'];
+    const mockResponse = { token: 'abc', type: 'Bearer', id: 1, username: 'test', firstName: 'a', lastName: 'b', admin: false };
+    jest.spyOn(authService, 'login').mockReturnValue({ pipe: () => ({ subscribe: (obj: any) => obj.next(mockResponse) }) } as any);
+    const spyLogIn = jest.spyOn(sessionService, 'logIn');
+    const spyNavigate = jest.spyOn(router, 'navigate');
+    component.form.setValue({ email: 'test@test.com', password: 'pass' });
+    component.submit();
+    expect(spyLogIn).toHaveBeenCalledWith(mockResponse);
+    expect(spyNavigate).toHaveBeenCalledWith(['/sessions']);
+  });
+
+  it('should call submit() and handle error', () => {
+    const authService = component['authService'];
+    jest.spyOn(authService, 'login').mockReturnValue({ pipe: () => ({ subscribe: (obj: any) => obj.error('err') }) } as any);
+    component.form.setValue({ email: 'test@test.com', password: 'pass' });
+    component.submit();
+    expect(component.onError).toBe(true);
   });
 });

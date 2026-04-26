@@ -13,9 +13,7 @@ describe('AppComponent', () => {
       imports: [
         RouterTestingModule,
         HttpClientModule,
-        MatToolbarModule
-      ],
-      declarations: [
+        MatToolbarModule,
         AppComponent
       ],
     }).compileComponents();
@@ -25,5 +23,24 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
+  });
+
+  it('should call $isLogged and return observable', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    const obs = app.$isLogged();
+    expect(obs.subscribe).toBeDefined();
+  });
+
+  it('should call logout and navigate', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    const sessionService = app['sessionService'];
+    const router = app['router'];
+    const spyLogout = jest.spyOn(sessionService, 'logOut');
+    const spyNavigate = jest.spyOn(router, 'navigate');
+    app.logout();
+    expect(spyLogout).toHaveBeenCalled();
+    expect(spyNavigate).toHaveBeenCalledWith(['']);
   });
 });
