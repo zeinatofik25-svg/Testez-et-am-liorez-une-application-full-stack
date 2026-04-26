@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "title": "Yoga du matin",
+    "teacher": "Professeur X",
+    "date": "2026-05-01",
+    "participants": ["Alice", "Bob"]
+  },
+  {
+    "id": 2,
+    "title": "Yoga du soir",
+    "teacher": "Professeur Y",
+    "date": "2026-05-02",
+    "participants": ["Charlie"]
+  }
+]

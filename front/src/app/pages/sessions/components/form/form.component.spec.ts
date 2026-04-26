@@ -27,7 +27,6 @@ describe('FormComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-
       imports: [
         RouterTestingModule,
         HttpClientModule,
@@ -38,13 +37,13 @@ describe('FormComponent', () => {
         ReactiveFormsModule,
         MatSnackBarModule,
         MatSelectModule,
-        BrowserAnimationsModule
+        BrowserAnimationsModule,
+        FormComponent
       ],
       providers: [
         { provide: SessionService, useValue: mockSessionService },
         SessionApiService
       ],
-      declarations: [FormComponent]
     })
       .compileComponents();
 
@@ -55,5 +54,28 @@ describe('FormComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should call submit() for create', () => {
+    component.onUpdate = false;
+    component.sessionForm = { value: { name: 's', description: 'd', date: new Date(), teacher_id: 1, users: [] } } as any;
+    const sessionApiService = component['sessionApiService'];
+    const spyCreate = jest.spyOn(sessionApiService, 'create').mockReturnValue({ pipe: () => ({ subscribe: (cb: any) => cb({}) }) } as any);
+    const exitSpy = jest.spyOn(component as any, 'exitPage').mockImplementation();
+    component.submit();
+    expect(spyCreate).toHaveBeenCalled();
+    expect(exitSpy).toHaveBeenCalled();
+  });
+
+  it('should call submit() for update', () => {
+    component.onUpdate = true;
+    component.sessionForm = { value: { name: 's', description: 'd', date: new Date(), teacher_id: 1, users: [] } } as any;
+    component['id'] = '1';
+    const sessionApiService = component['sessionApiService'];
+    const spyUpdate = jest.spyOn(sessionApiService, 'update').mockReturnValue({ pipe: () => ({ subscribe: (cb: any) => cb({}) }) } as any);
+    const exitSpy = jest.spyOn(component as any, 'exitPage').mockImplementation();
+    component.submit();
+    expect(spyUpdate).toHaveBeenCalled();
+    expect(exitSpy).toHaveBeenCalled();
   });
 });

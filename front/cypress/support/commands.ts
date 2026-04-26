@@ -41,3 +41,23 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
+
+// Simule un login API pour les tests E2E
+Cypress.Commands.add('loginByApi', () => {
+	window.localStorage.setItem('token', 'fake-jwt-token');
+	window.localStorage.setItem('user', JSON.stringify({
+		id: 1,
+		username: 'userName',
+		firstName: 'firstName',
+		lastName: 'lastName',
+		admin: true
+	}));
+});
+
+declare global {
+	namespace Cypress {
+		interface Chainable {
+			loginByApi(): Chainable<void>;
+		}
+	}
+}
