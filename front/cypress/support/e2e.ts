@@ -13,7 +13,12 @@
 // https://on.cypress.io/configuration
 // ***********************************************************
 
-// When a command from ./commands is ready to use, import with `import './commands'` syntax
-// import './commands';
+declare const Cypress: any;
+declare function require(moduleName: string): any;
 
-import '@cypress/code-coverage/support';
+// When a command from ./commands is ready to use, import with `import './commands'` syntax
+import './commands';
+
+if (Cypress.env('coverage')) {
+	require('@cypress/code-coverage/support');
+}

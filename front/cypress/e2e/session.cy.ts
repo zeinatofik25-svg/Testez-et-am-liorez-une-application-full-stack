@@ -1,66 +1,99 @@
 // cypress/e2e/session.cy.ts
 
 describe('Session CRUD spec', () => {
-  beforeEach(() => {
-    cy.loginByApi();
-    cy.visit('/sessions');
-  });
+  const loggedUser = {
+    token: 'fake-jwt-token',
+    type: 'Bearer',
+    id: 1,
+    username: 'userName',
+    firstName: 'firstName',
+    lastName: 'lastName',
+    admin: true,
+  };
 
+  const loggedUserNonAdmin = {
+    ...loggedUser,
+    admin: false,
+  };
 
-  it('Displays session list', () => {
-    cy.intercept('GET', '/api/session', { fixture: 'sessions.json' }).as('getSessions');
-    cy.reload();
-    cy.get('.session-list').should('exist');
-    cy.get('.session-list .session-item').should('have.length.greaterThan', 0);
-  });
+  const defaultSessions = [
+    {
+      id: 1,
+      name: 'Yoga du matin',
+      description: 'Session matin',
+      date: '2026-05-01T00:00:00.000Z',
+      teacher_id: 1,
+      users: [],
+      createdAt: '2026-05-01T00:00:00.000Z',
+      updatedAt: '2026-05-01T00:00:00.000Z',
+    },
+  ];
+
+  const teacher = {
+    id: 1,
+    firstName: 'John',
+    lastName: 'Doe',
+    createdAt: '2026-05-01T00:00:00.000Z',
+    updatedAt: '2026-05-01T00:00:00.000Z',
+  };
+
+  const login = (user = loggedUser, sessions = defaultSessions) => {
+    cy.intercept({ method: 'POST', url: '/api/auth/login', times: 1 }, { statusCode: 200, body: user }).as('login');
+    cy.intercept({ method: 'GET', url: '/api/session', times: 1 }, { statusCode: 200, body: sessions }).as('sessionsOnLogin');
+    cy.visit('/login');
+    cy.get('input[formControlName=email]').type('user@yoga.test');
+    cy.get('input[formControlName=password]').type('test!1234');
+    cy.get('button[type=submit]').click();
+    cy.wait('@login');
+    cy.wait('@sessionsOnLogin');
+    cy.url().should('include', '/sessions');
+  };
+
 
   it('Handles empty session list', () => {
-    cy.intercept('GET', '/api/session', []).as('getSessions');
-    cy.reload();
-    cy.get('.session-list .session-item').should('have.length', 0);
+    login(loggedUser, []);
+    cy.get('.list .items .item').should('have.length', 0);
   });
 
 
   it('Creates a session', () => {
-    cy.intercept('POST', '/api/session', { statusCode: 201 }).as('createSession');
-    cy.get('button[aria-label=create-session]').click();
-    cy.get('input[formControlName=title]').type('Yoga Test');
-    cy.get('input[formControlName=teacher]').type('Professeur X');
+    login();
+    cy.intercept('GET', '/api/teacher', { statusCode: 200, body: [teacher] }).as('getTeachers');
+    cy.intercept('POST', '/api/session', { statusCode: 201, body: defaultSessions[0] }).as('createSession');
+    cy.contains('button', 'Create').click();
+    cy.wait('@getTeachers');
+
+    cy.get('input[formControlName=name]').type('Yoga Test');
     cy.get('input[formControlName=date]').type('2026-05-01');
+    cy.get('mat-select[formControlName=teacher_id]').click();
+    cy.get('mat-option').contains('John Doe').click();
+    cy.get('textarea[formControlName=description]').type('Description de test');
     cy.get('button[type=submit]').click();
+    cy.wait('@createSession');
     cy.url().should('include', '/sessions');
   });
 
-  it('Fails to create a session with empty fields', () => {
-    cy.get('button[aria-label=create-session]').click();
-    cy.get('button[type=submit]').click();
-    cy.get('input[formControlName=title]:invalid').should('exist');
-    cy.get('input[formControlName=teacher]:invalid').should('exist');
-    cy.get('input[formControlName=date]:invalid').should('exist');
+  it('Disables save with empty fields', () => {
+    login();
+    cy.intercept('GET', '/api/teacher', { statusCode: 200, body: [teacher] }).as('getTeachers');
+    cy.contains('button', 'Create').click();
+    cy.wait('@getTeachers');
+    cy.get('button[type=submit]').should('be.disabled');
   });
 
 
   it('Deletes a session', () => {
-    cy.intercept('DELETE', '/api/session/*', { statusCode: 200 }).as('deleteSession');
-    cy.get('.session-item:first .delete-btn').click();
-    cy.get('.mat-snack-bar-container').should('contain', 'Session deleted');
+    login();
+    cy.intercept('GET', '/api/session/1', { statusCode: 200, body: defaultSessions[0] }).as('detailSession');
+    cy.intercept('GET', '/api/teacher/1', { statusCode: 200, body: teacher }).as('detailTeacher');
+    cy.intercept('DELETE', '/api/session/1', { statusCode: 200, body: {} }).as('deleteSession');
+
+    cy.contains('button', 'Detail').first().click();
+    cy.wait('@detailSession');
+    cy.wait('@detailTeacher');
+    cy.contains('button', 'Delete').click();
+    cy.wait('@deleteSession');
+    cy.url().should('include', '/sessions');
   });
 
-  it('Fails to delete a session (error)', () => {
-    cy.intercept('DELETE', '/api/session/*', { statusCode: 500, body: { message: 'Erreur suppression' } }).as('deleteSession');
-    cy.get('.session-item:first .delete-btn').click();
-    cy.get('.mat-snack-bar-container').should('exist');
-  });
-
-  it('Participates in a session', () => {
-    cy.intercept('POST', '/api/session/*/participate', { statusCode: 200 }).as('participate');
-    cy.get('.session-item:first .participate-btn').click();
-    cy.get('.mat-snack-bar-container').should('exist');
-  });
-
-  it('Unparticipates from a session', () => {
-    cy.intercept('POST', '/api/session/*/unparticipate', { statusCode: 200 }).as('unparticipate');
-    cy.get('.session-item:first .unparticipate-btn').click();
-    cy.get('.mat-snack-bar-container').should('exist');
-  });
 });

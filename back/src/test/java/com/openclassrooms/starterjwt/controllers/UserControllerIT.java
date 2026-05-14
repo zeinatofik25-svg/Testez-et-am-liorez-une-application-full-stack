@@ -33,7 +33,7 @@ class UserControllerIT {
 
     @Test
     void deleteUser_success() throws Exception {
-        Mockito.doNothing().when(userService).delete(anyLong(), anyString());
+        Mockito.doNothing().when(userService).delete(anyLong(), toString());
         mockMvc.perform(delete("/api/user/1")
                 .param("email", "test@test.com"))
                 .andExpect(status().isOk());

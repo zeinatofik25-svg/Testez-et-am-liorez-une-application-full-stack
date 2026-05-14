@@ -28,13 +28,14 @@ describe('Register spec', () => {
     cy.get('input[formControlName=firstName]').type('Jane');
     cy.get('input[formControlName=lastName]').type('Doe');
     cy.get('button[type=submit]').click();
-    cy.contains('Email is already taken!').should('exist');
+    cy.wait('@register');
+    cy.contains('An error occurred').should('exist');
     cy.url().should('include', '/register');
   });
 
   it('Register fails with empty fields', () => {
     cy.visit('/register');
-    cy.get('button[type=submit]').click();
+    cy.get('button[type=submit]').should('be.disabled');
     cy.get('input[formControlName=email]:invalid').should('exist');
     cy.get('input[formControlName=password]:invalid').should('exist');
     cy.get('input[formControlName=firstName]:invalid').should('exist');

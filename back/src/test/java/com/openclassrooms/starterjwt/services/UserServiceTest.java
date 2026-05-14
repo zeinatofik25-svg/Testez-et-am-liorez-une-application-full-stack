@@ -63,7 +63,7 @@ class UserServiceTest {
 
     @Test
     void findByEmail_success() {
-        User user = new User();
+        Optional<User> user = Optional.of(new User());
         when(userRepository.findByEmail(anyString())).thenReturn(user);
         assertEquals(user, userService.findByEmail("test@test.com"));
     }

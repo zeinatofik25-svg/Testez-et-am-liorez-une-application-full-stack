@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Optional;
+
 @Service
 public class UserService {
     private final UserRepository userRepository;
@@ -27,8 +29,8 @@ public class UserService {
         this.userRepository.deleteById(id);
     }
 
-    public User findByEmail(String email) {
-        return this.userRepository.findByEmail(email).orElse(null);
+    public Optional<User> findByEmail(String email) {
+        return this.userRepository.findByEmail(email);
     }
 
     public boolean existsByEmail(String email) {

@@ -104,4 +104,44 @@ class SessionServiceTest {
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
         assertThrows(NotFoundException.class, () -> sessionService.participate(1L, 2L));
     }
+
+    @Test
+    void noLongerParticipate_success() {
+        User user = new User();
+        user.setId(2L);
+        Session session = new Session();
+        session.setUsers(Arrays.asList(user));
+        when(sessionRepository.findById(anyLong())).thenReturn(Optional.of(session));
+
+        assertDoesNotThrow(() -> sessionService.noLongerParticipate(1L, 2L));
+        verify(sessionRepository).save(any(Session.class));
+    }
+
+    @Test
+    void noLongerParticipate_sessionNotFound() {
+        when(sessionRepository.findById(anyLong())).thenReturn(Optional.empty());
+        assertThrows(NotFoundException.class, () -> sessionService.noLongerParticipate(1L, 2L));
+    }
+
+    @Test
+    void noLongerParticipate_whenUsersNull_throwsBadRequest() {
+        Session session = new Session();
+        session.setUsers(null);
+        when(sessionRepository.findById(anyLong())).thenReturn(Optional.of(session));
+
+        assertThrows(com.openclassrooms.starterjwt.exception.BadRequestException.class,
+                () -> sessionService.noLongerParticipate(1L, 2L));
+    }
+
+    @Test
+    void noLongerParticipate_whenUserNotParticipating_throwsBadRequest() {
+        User user = new User();
+        user.setId(9L);
+        Session session = new Session();
+        session.setUsers(Arrays.asList(user));
+        when(sessionRepository.findById(anyLong())).thenReturn(Optional.of(session));
+
+        assertThrows(com.openclassrooms.starterjwt.exception.BadRequestException.class,
+                () -> sessionService.noLongerParticipate(1L, 2L));
+    }
 }

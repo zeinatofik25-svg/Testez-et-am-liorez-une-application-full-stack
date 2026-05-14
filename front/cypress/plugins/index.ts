@@ -3,6 +3,10 @@
  */
 const registerCodeCoverageTasks = require('@cypress/code-coverage/task');
 
-module.exports = (on, config) => {
-  return registerCodeCoverageTasks(on, config);
+module.exports = function setupPlugins(on, config) {
+  if (config.env?.coverage) {
+    return registerCodeCoverageTasks(on, config);
+  }
+
+  return config;
 };

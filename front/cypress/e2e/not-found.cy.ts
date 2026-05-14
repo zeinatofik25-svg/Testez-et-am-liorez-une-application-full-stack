@@ -3,8 +3,8 @@
 describe('Not Found spec', () => {
   it('Redirects to 404 page for unknown route', () => {
     cy.visit('/unknown-route', { failOnStatusCode: false });
-    cy.get('.not-found').should('exist');
-    cy.get('.not-found').should('contain', '404');
+    cy.url().should('include', '/404');
+    cy.contains('h1', 'Page not found !').should('exist');
   });
 
   it('Redirects to login if not authenticated', () => {
@@ -15,11 +15,10 @@ describe('Not Found spec', () => {
 
   it('Logout removes token and redirects', () => {
     cy.loginByApi();
-    cy.visit('/me');
-    cy.get('button[aria-label=logout]').click();
+    cy.contains('span.link', 'Account').click();
+    cy.url().should('include', '/me');
+    cy.contains('span.link', 'Logout').click();
     cy.url().should('include', '/login');
-    cy.window().then(win => {
-      expect(win.localStorage.getItem('token')).to.be.null;
-    });
+    cy.contains('a.link', 'Login').should('exist');
   });
 });

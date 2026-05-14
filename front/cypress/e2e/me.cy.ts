@@ -1,18 +1,34 @@
-// cypress/e2e/me.cy.ts
-
 describe('Me/Logout spec', () => {
   beforeEach(() => {
-    cy.loginByApi(); // Custom command to set token/localStorage if available
-    cy.visit('/me');
+    cy.intercept('GET', '/api/user/1', {
+      statusCode: 200,
+      body: {
+        id: 1,
+        username: 'userName',
+        firstName: 'firstName',
+        email: 'user@yoga.test',
+        lastName: 'lastName',
+        admin: true,
+        createdAt: '2026-05-01T00:00:00.000Z',
+        updatedAt: '2026-05-01T00:00:00.000Z'
+      }
+    }).as('getMe');
+
+    cy.loginByApi();
+    cy.contains('span.link', 'Account').click();
+    cy.url().should('include', '/me');
+    cy.wait('@getMe');
   });
 
   it('Displays user info', () => {
-    cy.get('.user-info').should('exist');
-    cy.get('.user-info').should('contain', 'firstName');
+    cy.contains('h1', 'User information').should('exist');
+    cy.contains('p', 'Name:').should('exist');
+    cy.contains('p', 'Email:').should('exist');
   });
 
-  it('Logout redirects to login', () => {
-    cy.get('button[aria-label=logout]').click();
-    cy.url().should('include', '/login');
+
+  it('Back button redirects to sessions', () => {
+    cy.get('button[mat-icon-button]').first().click();
+    cy.url().should('include', '/sessions');
   });
 });

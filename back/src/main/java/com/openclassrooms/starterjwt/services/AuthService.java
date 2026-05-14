@@ -14,6 +14,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class AuthService {
     private final AuthenticationManager authenticationManager;
@@ -39,11 +41,8 @@ public class AuthService {
         String jwt = jwtUtils.generateJwtToken(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        boolean isAdmin = false;
-        User user = this.userService.findByEmail(userDetails.getUsername());
-        if (user != null) {
-            isAdmin = user.isAdmin();
-        }
+        Optional<User> user = this.userService.findByEmail(userDetails.getUsername());
+        boolean isAdmin = user != null && user.map(User::isAdmin).orElse(false);
 
         return new JwtResponse(jwt,
                 userDetails.getId(),

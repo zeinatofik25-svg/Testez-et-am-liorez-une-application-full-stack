@@ -17,6 +17,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -57,7 +59,7 @@ class AuthServiceTest {
         when(userDetails.getUsername()).thenReturn("test@test.com");
         when(userDetails.getFirstName()).thenReturn("John");
         when(userDetails.getLastName()).thenReturn("Doe");
-        when(userService.findByEmail(anyString())).thenReturn(new User());
+        when(userService.findByEmail(anyString())).thenReturn(Optional.of(new User()));
 
         JwtResponse response = authService.authenticate(loginRequest);
         assertEquals("jwt-token", response.getToken());

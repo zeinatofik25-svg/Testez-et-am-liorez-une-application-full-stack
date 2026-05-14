@@ -42,22 +42,43 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
-// Simule un login API pour les tests E2E
-Cypress.Commands.add('loginByApi', () => {
-	window.localStorage.setItem('token', 'fake-jwt-token');
-	window.localStorage.setItem('user', JSON.stringify({
+interface LoginOverride {
+	id?: number;
+	username?: string;
+	firstName?: string;
+	lastName?: string;
+	admin?: boolean;
+}
+
+// Logs in through the actual UI flow with mocked backend responses.
+Cypress.Commands.add('loginByApi', (override: LoginOverride = {}) => {
+	const user = {
+		token: 'fake-jwt-token',
+		type: 'Bearer',
 		id: 1,
 		username: 'userName',
 		firstName: 'firstName',
 		lastName: 'lastName',
-		admin: true
-	}));
+		admin: true,
+		...override,
+	};
+
+	cy.intercept({ method: 'POST', url: '/api/auth/login', times: 1 }, { statusCode: 200, body: user }).as('loginByApi');
+	cy.intercept({ method: 'GET', url: '/api/session', times: 1 }, { statusCode: 200, body: [] }).as('loginByApiSessions');
+
+	cy.visit('/login');
+	cy.get('input[formControlName=email]').type('user@yoga.test');
+	cy.get('input[formControlName=password]').type('test!1234');
+	cy.get('button[type=submit]').click();
+	cy.wait('@loginByApi');
+	cy.wait('@loginByApiSessions');
+	cy.url().should('include', '/sessions');
 });
 
 declare global {
 	namespace Cypress {
 		interface Chainable {
-			loginByApi(): Chainable<void>;
+			loginByApi(override?: LoginOverride): Chainable<void>;
 		}
 	}
 }
